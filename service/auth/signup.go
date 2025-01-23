@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/Iyed-M/teamup-backend/types"
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -24,28 +24,25 @@ type SignupResponse struct {
 	Username     string `json:"username"`
 }
 
-func (a authService) Signup(c echo.Context) error {
+func (a authService) Signup(c *fiber.Ctx) error {
 	var req signupRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	// Check if email already exists
 	var existingUser types.User
 	err := a.db.Where("email = ?", req.Email).First(&existingUser).Error
 	if err == nil {
-		return echo.NewHTTPError(http.StatusConflict, "Email already exists")
+		return fiber.NewError(http.StatusConflict, "Email already exists")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Database error")
+		return fiber.NewError(http.StatusInternalServerError, "Database error")
 	}
 
-	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to hash password")
+		return fiber.NewError(http.StatusInternalServerError, "Failed to hash password")
 	}
 
-	// Create new user
 	user := types.User{
 		Email:    req.Email,
 		Password: string(hashedPassword),
@@ -55,19 +52,19 @@ func (a authService) Signup(c echo.Context) error {
 
 	accessToken, err := a.generateToken(user.ID.String(), a.JWTAccessDuration)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate access token")
+		return fiber.NewError(http.StatusInternalServerError, "Failed to generate access token")
 	}
 
 	refreshToken, err := a.generateToken(user.ID.String(), a.JWTRefreshDuration)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate refresh token")
+		return fiber.NewError(http.StatusInternalServerError, "Failed to generate refresh token")
 	}
 
 	user.RefreshToken = &refreshToken
 	if err := a.db.Create(&user).Error; err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create user")
+		return fiber.NewError(http.StatusInternalServerError, "Failed to create user")
 	}
-	return c.JSON(http.StatusCreated, SignupResponse{
+	return c.JSON(SignupResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		Email:        user.Email,

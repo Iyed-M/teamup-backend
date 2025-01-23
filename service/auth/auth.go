@@ -13,7 +13,7 @@ type authService struct {
 	db                 *gorm.DB
 }
 
-func NewAuthSerive(JWTSecret []byte, JWTAccessDuration, JWTRefreshDuration time.Duration, db *gorm.DB) authService {
+func NewAuthService(JWTSecret []byte, JWTAccessDuration, JWTRefreshDuration time.Duration, db *gorm.DB) authService {
 	return authService{
 		JWTSecret:          JWTSecret,
 		JWTAccessDuration:  JWTAccessDuration,

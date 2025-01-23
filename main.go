@@ -5,11 +5,9 @@ import (
 
 	"github.com/Iyed-M/teamup-backend/config"
 	"github.com/Iyed-M/teamup-backend/service/auth"
-	"github.com/Iyed-M/teamup-backend/types"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
 func main() {
@@ -17,31 +15,33 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db, err := initDB(cfg)
+	db, err := config.InitDB(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	e := echo.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			if e, ok := err.(*fiber.Error); ok {
+				return c.Status(e.Code).JSON(fiber.Map{
+					"error": e.Message,
+				})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Internal Server Error",
+			})
+		},
+	})
 
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	app.Use(logger.New())
+	app.Use(recover.New())
 
-	auth := auth.NewAuthSerive([]byte(cfg.JWTSecret), 1000, 1000, db)
+	auth := auth.NewAuthService([]byte(cfg.JWTSecret), cfg.JWTAccessDuration, cfg.JWTRefreshDuration, db)
 
-	e.POST("/signup", auth.Signup)
-	e.POST("/login", auth.Login)
-	e.POST("/refresh", auth.Refresh)
+	app.Post("/signup", auth.Signup)
+	app.Post("/login", auth.Login)
+	app.Post("/refresh", auth.Refresh)
+	app.Post("/logout", auth.Logout)
 
-	// Start server
-	e.Logger.Fatal(e.Start(":8080"))
-}
-
-func initDB(cfg *config.Config) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(cfg.DbURL), &gorm.Config{})
-	db.AutoMigrate(&types.User{}, &types.Team{}, &types.TeamPermission{}, &types.ProjectPermission{}, &types.Project{}, &types.DirectMessage{}, &types.TeamMessages{}, &types.Task{})
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
+	log.Fatal(app.Listen(":8080"))
 }

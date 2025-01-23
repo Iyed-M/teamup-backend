@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"strings"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -26,4 +28,34 @@ func (a authService) generateToken(userId string, duration time.Duration) (strin
 		return "", err
 	}
 	return tokenString, nil
+}
+
+func parseFromHeader(authHeader string, jwtSecret []byte) (userID string, err error) {
+	if authHeader == "" {
+		return "", fiber.NewError(fiber.StatusUnauthorized, "Missing authorization token")
+	}
+
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return "", fiber.NewError(fiber.StatusUnauthorized, "Invalid authorization header format")
+	}
+
+	tokenString := parts[1]
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fiber.NewError(fiber.StatusUnauthorized, "Invalid token signing method")
+		}
+		return jwtSecret, nil
+	})
+
+	if err != nil || !token.Valid {
+		return "", fiber.NewError(fiber.StatusUnauthorized, "Invalid token")
+	}
+
+	claims, ok := token.Claims.(Claims)
+	if !ok {
+		return "", fiber.NewError(fiber.StatusUnauthorized, "Invalid token claims")
+	}
+	return claims.UserID, err
 }
