@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	log.SetLevel(log.LevelTrace)
 	cfg, err := config.NewConfig()
 	if err != nil {
 		log.Fatal(err)

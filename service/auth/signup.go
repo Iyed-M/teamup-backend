@@ -63,6 +63,7 @@ func (a authService) Signup(c *fiber.Ctx) error {
 		Email:        req.Email,
 		Password:     string(hashedPassword),
 		RefreshToken: &refreshToken,
+		Username:     req.Username,
 	})
 	if err != nil {
 		log.Errorw("cant create user", "err", err)

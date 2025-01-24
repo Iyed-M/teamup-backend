@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
@@ -27,23 +28,19 @@ func (a authService) Refresh(c *fiber.Ctx) error {
 
 	refreshToken := parts[1]
 
-	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(refreshToken, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fiber.NewError(fiber.StatusUnauthorized, "Invalid token signing method")
 		}
 		return []byte(a.JWTSecret), nil
 	})
 	if err != nil {
-		return fiber.NewError(fiber.StatusUnauthorized, "Invalid refresh token")
+		return fiber.NewError(fiber.StatusUnauthorized, "unparsable refresh token")
 	}
 
 	if !token.Valid {
-		return fiber.NewError(fiber.StatusUnauthorized, "Invalid refresh token")
-	}
-
-	claims, ok := token.Claims.(Claims)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "Invalid token claims")
+		return fiber.NewError(fiber.StatusUnauthorized, "refresh token not valid")
 	}
 
 	userID := claims.UserID
@@ -52,8 +49,11 @@ func (a authService) Refresh(c *fiber.Ctx) error {
 		return err
 	}
 	tokenDB, err := a.db.GetRefreshToken(c.Context(), id)
+	log.Info("tokendb=", tokenDB)
+	log.Info("userID=", userID)
 	if err != nil || tokenDB == nil {
-		return fiber.NewError(fiber.StatusUnauthorized, "Invalid refresh token")
+		log.Info("err", err)
+		return fiber.NewError(fiber.StatusUnauthorized, "Invalid Refresh token")
 	}
 	if refreshToken != *tokenDB {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid refresh token")
