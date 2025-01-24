@@ -3,10 +3,9 @@ package auth
 import (
 	"net/http"
 
-	"github.com/Iyed-M/teamup-backend/types"
+	"github.com/Iyed-M/teamup-backend/internal/repository"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type loginRequest struct {
@@ -31,12 +30,9 @@ func (a authService) Login(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Email and password are required")
 	}
 
-	var user types.User
-	if err := a.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return fiber.NewError(fiber.StatusUnauthorized, "Invalid credentials")
-		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Database error")
+	user, err := a.db.GetUserByEmail(c.Context(), req.Email)
+	if err != nil {
+		return fiber.NewError(fiber.StatusUnauthorized, "Wrong email or password")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
@@ -52,7 +48,10 @@ func (a authService) Login(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to generate refresh token")
 	}
-	a.db.Model(&types.User{}).Where("id = ?", user.ID).Update("refresh_token", refreshToken)
+	a.db.UpdateRefreshToken(c.Context(), repository.UpdateRefreshTokenParams{
+		RefreshToken: &refreshToken,
+		UserID:       user.ID,
+	})
 
 	return c.JSON(loginResponse{
 		Email:        user.Email,

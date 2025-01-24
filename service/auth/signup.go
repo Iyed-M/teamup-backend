@@ -1,14 +1,15 @@
 package auth
 
 import (
-	"errors"
+	"context"
 	"net/http"
 
-	"github.com/Iyed-M/teamup-backend/types"
+	"github.com/Iyed-M/teamup-backend/internal/repository"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type signupRequest struct {
@@ -25,45 +26,49 @@ type SignupResponse struct {
 }
 
 func (a authService) Signup(c *fiber.Ctx) error {
+	ctx := context.Background()
 	var req signupRequest
 	if err := c.BodyParser(&req); err != nil {
+		log.Errorw("parseError", "err", err)
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	var existingUser types.User
-	err := a.db.Where("email = ?", req.Email).First(&existingUser).Error
+	_, err := a.db.GetUserByEmail(ctx, req.Email)
 	if err == nil {
 		return fiber.NewError(http.StatusConflict, "Email already exists")
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+	} else if err != pgx.ErrNoRows {
+		log.Errorw("db error", "err", err)
 		return fiber.NewError(http.StatusInternalServerError, "Database error")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Errorw("Cant hash password", "err", err)
 		return fiber.NewError(http.StatusInternalServerError, "Failed to hash password")
 	}
 
-	user := types.User{
-		Email:    req.Email,
-		Password: string(hashedPassword),
-		Username: req.Username,
-		ID:       uuid.New(),
-	}
+	userID := uuid.New()
 
-	accessToken, err := a.generateToken(user.ID.String(), a.JWTAccessDuration)
+	accessToken, err := a.generateToken(userID.String(), a.JWTAccessDuration)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to generate access token")
 	}
 
-	refreshToken, err := a.generateToken(user.ID.String(), a.JWTRefreshDuration)
+	refreshToken, err := a.generateToken(userID.String(), a.JWTRefreshDuration)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to generate refresh token")
 	}
 
-	user.RefreshToken = &refreshToken
-	if err := a.db.Create(&user).Error; err != nil {
+	user, err := a.db.CreateUser(ctx, repository.CreateUserParams{
+		Email:        req.Email,
+		Password:     string(hashedPassword),
+		RefreshToken: &refreshToken,
+	})
+	if err != nil {
+		log.Errorw("cant create user", "err", err)
 		return fiber.NewError(http.StatusInternalServerError, "Failed to create user")
 	}
+
 	return c.JSON(SignupResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,

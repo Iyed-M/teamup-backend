@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -25,6 +26,7 @@ func (a authService) generateToken(userId string, duration time.Duration) (strin
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(a.JWTSecret))
 	if err != nil {
+		log.Errorw("Cant create token ", "err", err)
 		return "", err
 	}
 	return tokenString, nil

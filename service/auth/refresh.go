@@ -1,12 +1,11 @@
 package auth
 
 import (
-	"log"
 	"strings"
 
-	"github.com/Iyed-M/teamup-backend/types"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 )
 
 type refreshResponse struct {
@@ -48,11 +47,15 @@ func (a authService) Refresh(c *fiber.Ctx) error {
 	}
 
 	userID := claims.UserID
-
-	user := &types.User{}
-	a.db.Where("id = ? ", refreshToken, userID).First(&user)
-	log.Println(user)
-	if user.RefreshToken != &refreshToken {
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+	tokenDB, err := a.db.GetRefreshToken(c.Context(), id)
+	if err != nil || tokenDB == nil {
+		return fiber.NewError(fiber.StatusUnauthorized, "Invalid refresh token")
+	}
+	if refreshToken != *tokenDB {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid refresh token")
 	}
 	newAccessToken, err := a.generateToken(userID, a.JWTAccessDuration)

@@ -3,17 +3,17 @@ package auth
 import (
 	"time"
 
-	"gorm.io/gorm"
+	"github.com/Iyed-M/teamup-backend/internal/repository"
 )
 
 type authService struct {
 	JWTSecret          []byte
 	JWTAccessDuration  time.Duration
 	JWTRefreshDuration time.Duration
-	db                 *gorm.DB
+	db                 *repository.Queries
 }
 
-func NewAuthService(JWTSecret []byte, JWTAccessDuration, JWTRefreshDuration time.Duration, db *gorm.DB) authService {
+func NewAuthService(JWTSecret []byte, JWTAccessDuration, JWTRefreshDuration time.Duration, db *repository.Queries) authService {
 	return authService{
 		JWTSecret:          JWTSecret,
 		JWTAccessDuration:  JWTAccessDuration,
