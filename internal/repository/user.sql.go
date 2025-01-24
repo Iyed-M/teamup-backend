@@ -26,10 +26,10 @@ INSERT INTO users (
 `
 
 type CreateUserParams struct {
-	Email        string
-	Password     string
-	Username     string
-	RefreshToken *string
+	Email        string  `json:"email"`
+	Password     string  `json:"password"`
+	Username     string  `json:"username"`
+	RefreshToken *string `json:"refreshToken"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -115,8 +115,8 @@ WHERE id = $2
 `
 
 type UpdateRefreshTokenParams struct {
-	RefreshToken *string
-	UserID       uuid.UUID
+	RefreshToken *string   `json:"refreshToken"`
+	UserID       uuid.UUID `json:"userId"`
 }
 
 func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) error {

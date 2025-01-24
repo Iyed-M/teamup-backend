@@ -33,8 +33,8 @@ func (e *InvitationStatus) Scan(src interface{}) error {
 }
 
 type NullInvitationStatus struct {
-	InvitationStatus InvitationStatus
-	Valid            bool // Valid is true if InvitationStatus is not NULL
+	InvitationStatus InvitationStatus `json:"invitationStatus"`
+	Valid            bool             `json:"valid"` // Valid is true if InvitationStatus is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -56,76 +56,76 @@ func (ns NullInvitationStatus) Value() (driver.Value, error) {
 }
 
 type DirectMessage struct {
-	ID         uuid.UUID
-	SenderID   uuid.UUID
-	ReceiverID uuid.UUID
-	Message    string
-	CreatedAt  pgtype.Timestamp
+	ID         uuid.UUID        `json:"id"`
+	SenderID   uuid.UUID        `json:"senderId"`
+	ReceiverID uuid.UUID        `json:"receiverId"`
+	Message    string           `json:"message"`
+	CreatedAt  pgtype.Timestamp `json:"createdAt"`
 }
 
 type Project struct {
-	ID        uuid.UUID
-	Name      string
-	TeamID    uuid.UUID
-	CreatedAt pgtype.Timestamp
+	ID        uuid.UUID        `json:"id"`
+	Name      string           `json:"name"`
+	TeamID    uuid.UUID        `json:"teamId"`
+	CreatedAt pgtype.Timestamp `json:"createdAt"`
 }
 
 type ProjectPermission struct {
-	ID          uuid.UUID
-	UserID      uuid.UUID
-	ProjectID   uuid.UUID
-	Permissions []string
+	ID          uuid.UUID `json:"id"`
+	UserID      uuid.UUID `json:"userId"`
+	ProjectID   uuid.UUID `json:"projectId"`
+	Permissions []string  `json:"permissions"`
 }
 
 type SubTask struct {
-	ID         uuid.UUID
-	MainTaskID uuid.UUID
-	SubTaskID  uuid.UUID
+	ID         uuid.UUID `json:"id"`
+	MainTaskID uuid.UUID `json:"mainTaskId"`
+	SubTaskID  uuid.UUID `json:"subTaskId"`
 }
 
 type Task struct {
-	ID            uuid.UUID
-	Content       string
-	ProjectID     uuid.UUID
-	CreatedAt     pgtype.Timestamp
-	Deadline      pgtype.Timestamp
-	AttachmentUrl *string
-	TaskOrder     int32
+	ID            uuid.UUID        `json:"id"`
+	Content       string           `json:"content"`
+	ProjectID     uuid.UUID        `json:"projectId"`
+	CreatedAt     pgtype.Timestamp `json:"createdAt"`
+	Deadline      pgtype.Timestamp `json:"deadline"`
+	AttachmentUrl *string          `json:"attachmentUrl"`
+	TaskOrder     int32            `json:"taskOrder"`
 }
 
 type TaskAssignment struct {
-	ID     uuid.UUID
-	UserID uuid.UUID
-	TaskID uuid.UUID
+	ID     uuid.UUID `json:"id"`
+	UserID uuid.UUID `json:"userId"`
+	TaskID uuid.UUID `json:"taskId"`
 }
 
 type Team struct {
-	ID        uuid.UUID
-	Name      string
-	Color     *string
-	CreatedAt pgtype.Timestamp
+	ID        uuid.UUID        `json:"id"`
+	Name      string           `json:"name"`
+	Color     *string          `json:"color"`
+	CreatedAt pgtype.Timestamp `json:"createdAt"`
 }
 
 type TeamInvitation struct {
-	ID         uuid.UUID
-	TeamID     uuid.UUID
-	SenderID   uuid.UUID
-	ReceiverID uuid.UUID
-	CreatedAt  pgtype.Timestamp
-	Status     InvitationStatus
+	ID         uuid.UUID        `json:"id"`
+	TeamID     uuid.UUID        `json:"teamId"`
+	SenderID   uuid.UUID        `json:"senderId"`
+	ReceiverID uuid.UUID        `json:"receiverId"`
+	CreatedAt  pgtype.Timestamp `json:"createdAt"`
+	Status     InvitationStatus `json:"status"`
 }
 
 type TeamPermission struct {
-	ID          uuid.UUID
-	TeamID      uuid.UUID
-	UserID      uuid.UUID
-	Permissions []string
+	ID          uuid.UUID `json:"id"`
+	TeamID      uuid.UUID `json:"teamId"`
+	UserID      uuid.UUID `json:"userId"`
+	Permissions []string  `json:"permissions"`
 }
 
 type User struct {
-	ID           uuid.UUID
-	Email        string
-	Password     string
-	Username     string
-	RefreshToken *string
+	ID           uuid.UUID `json:"id"`
+	Email        string    `json:"email"`
+	Password     string    `json:"password"`
+	Username     string    `json:"username"`
+	RefreshToken *string   `json:"refreshToken"`
 }
