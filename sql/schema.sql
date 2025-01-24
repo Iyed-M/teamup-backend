@@ -1,10 +1,10 @@
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) NOT NULL UNIQUE,
     password TEXT NOT NULL,
 	  username VARCHAR(255) NOT NULL,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     refresh_token TEXT
 );
 
@@ -17,15 +17,15 @@ CREATE TABLE teams (
 
 CREATE TABLE team_permissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+		team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    permissions TEXT[],
+		is_owner boolean NOT NULL DEFAULT false,
     UNIQUE(team_id, user_id)
 );
 
 CREATE TYPE invitation_status AS ENUM ('accepted', 'pending', 'rejected');
 
-CREATE TABLE team_invitation (
+CREATE TABLE team_invitations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
     sender_id UUID REFERENCES users(id) ON DELETE CASCADE,

@@ -1,18 +1,19 @@
-package auth
+package auth_handler
 
 import (
 	"github.com/Iyed-M/teamup-backend/internal/repository"
+	"github.com/Iyed-M/teamup-backend/types"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
-func (a authService) Logout(c *fiber.Ctx) error {
+func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
-	claims, _, err := a.jwt.parseFromHeader(authHeader)
+	claims, _, err := h.jwtService.ParseFromHeader(authHeader)
 	if err != nil {
 		return err
 	}
-	if claims.Type != JWTTypeAccess {
+	if claims.Type != types.JWTTypeAccess {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid token type")
 	}
 
@@ -21,11 +22,10 @@ func (a authService) Logout(c *fiber.Ctx) error {
 		return err
 	}
 
-	result := a.db.UpdateRefreshToken(c.Context(), repository.UpdateRefreshTokenParams{
+	if err := h.repo.UpdateRefreshToken(c.Context(), repository.UpdateRefreshTokenParams{
 		RefreshToken: nil,
 		UserID:       id,
-	})
-	if result.Error != nil {
+	}); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to logout user")
 	}
 

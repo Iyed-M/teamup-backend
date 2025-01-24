@@ -1,8 +1,6 @@
-package auth
+package auth_handler
 
 import (
-	"net/http"
-
 	"github.com/Iyed-M/teamup-backend/internal/repository"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -20,7 +18,7 @@ type loginResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-func (a authService) Login(c *fiber.Ctx) error {
+func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req loginRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
@@ -30,7 +28,7 @@ func (a authService) Login(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Email and password are required")
 	}
 
-	user, err := a.db.GetUserByEmail(c.Context(), req.Email)
+	user, err := h.repo.GetUserByEmail(c.Context(), req.Email)
 	if err != nil {
 		return fiber.NewError(fiber.StatusUnauthorized, "Wrong email or password")
 	}
@@ -39,19 +37,22 @@ func (a authService) Login(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid credentials")
 	}
 
-	accessToken, err := a.jwt.newAccessToken(user.ID)
+	accessToken, err := h.jwtService.NewAccessToken(user.ID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to generate access token")
 	}
 
-	refreshToken, err := a.jwt.newRefreshToken(user.ID)
+	refreshToken, err := h.jwtService.NewRefreshToken(user.ID)
 	if err != nil {
-		return fiber.NewError(http.StatusInternalServerError, "Failed to generate refresh token")
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to generate refresh token")
 	}
-	a.db.UpdateRefreshToken(c.Context(), repository.UpdateRefreshTokenParams{
+
+	if err := h.repo.UpdateRefreshToken(c.Context(), repository.UpdateRefreshTokenParams{
 		RefreshToken: &refreshToken,
 		UserID:       user.ID,
-	})
+	}); err != nil {
+		return err
+	}
 
 	return c.JSON(loginResponse{
 		Email:        user.Email,

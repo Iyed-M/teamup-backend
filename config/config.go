@@ -1,15 +1,18 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/Iyed-M/teamup-backend/internal/repository"
+	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 )
 
-type Config struct {
+type EnvVars struct {
 	DbURL              string
 	Port               string
 	JWTSecret          string
@@ -17,7 +20,7 @@ type Config struct {
 	JWTRefreshDuration time.Duration
 }
 
-func NewConfig() (*Config, error) {
+func ParseEnv() (*EnvVars, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, fmt.Errorf("[Config] loading .env file :%v", err)
@@ -26,8 +29,8 @@ func NewConfig() (*Config, error) {
 	if port == "" {
 		return nil, fmt.Errorf("[Config] PORT env is not set")
 	}
-	dburl := os.Getenv("DB")
-	if dburl == "" {
+	repourl := os.Getenv("DB")
+	if repourl == "" {
 		return nil, fmt.Errorf("[Config] DB env is not set")
 	}
 
@@ -45,11 +48,21 @@ func NewConfig() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("[Config] JWT_REFRESH_DURATION_HOURS env  err=%v", err)
 	}
-	return &Config{
+	return &EnvVars{
 		Port:               port,
-		DbURL:              dburl,
+		DbURL:              repourl,
 		JWTSecret:          jwtSecret,
 		JWTAccessDuration:  time.Hour * time.Duration(access),
 		JWTRefreshDuration: time.Hour * time.Duration(refresh),
 	}, nil
+}
+
+func InitDB(repourl string, ctx context.Context) (*repository.Queries, *pgx.Conn, error) {
+	conn, err := pgx.Connect(ctx, repourl)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	repo := repository.New(conn)
+	return repo, conn, nil
 }

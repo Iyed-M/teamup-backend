@@ -1,8 +1,7 @@
-package auth
+package auth_handler
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/Iyed-M/teamup-backend/internal/repository"
 	"github.com/gofiber/fiber/v2"
@@ -25,7 +24,7 @@ type SignupResponse struct {
 	Username     string `json:"username"`
 }
 
-func (a authService) Signup(c *fiber.Ctx) error {
+func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 	ctx := context.Background()
 	var req signupRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -33,33 +32,33 @@ func (a authService) Signup(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	_, err := a.db.GetUserByEmail(ctx, req.Email)
+	_, err := h.repo.GetUserByEmail(ctx, req.Email)
 	if err == nil {
-		return fiber.NewError(http.StatusConflict, "Email already exists")
+		return fiber.NewError(fiber.StatusConflict, "Email already exists")
 	} else if err != pgx.ErrNoRows {
-		log.Errorw("db error", "err", err)
-		return fiber.NewError(http.StatusInternalServerError, "Database error")
+		log.Errorw("repo error", "err", err)
+		return fiber.NewError(fiber.StatusInternalServerError, "Database error")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Errorw("Cant hash password", "err", err)
-		return fiber.NewError(http.StatusInternalServerError, "Failed to hash password")
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to hash password")
 	}
 
 	userID := uuid.New()
 
-	accessToken, err := a.jwt.newAccessToken(userID)
+	accessToken, err := h.jwtService.NewAccessToken(userID)
 	if err != nil {
-		return fiber.NewError(http.StatusInternalServerError, "Failed to generate access token")
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to generate access token")
 	}
 
-	refreshToken, err := a.jwt.newAccessToken(userID)
+	refreshToken, err := h.jwtService.NewRefreshToken(userID)
 	if err != nil {
-		return fiber.NewError(http.StatusInternalServerError, "Failed to generate refresh token")
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to generate refresh token")
 	}
 
-	user, err := a.db.CreateUser(ctx, repository.CreateUserParams{
+	user, err := h.repo.CreateUser(ctx, repository.CreateUserParams{
 		Email:        req.Email,
 		Password:     string(hashedPassword),
 		RefreshToken: &refreshToken,
@@ -67,7 +66,7 @@ func (a authService) Signup(c *fiber.Ctx) error {
 	})
 	if err != nil {
 		log.Errorw("cant create user", "err", err)
-		return fiber.NewError(http.StatusInternalServerError, "Failed to create user")
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to create user")
 	}
 
 	return c.JSON(SignupResponse{

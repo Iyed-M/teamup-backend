@@ -1,6 +1,7 @@
-package auth
+package auth_handler
 
 import (
+	"github.com/Iyed-M/teamup-backend/types"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/google/uuid"
@@ -10,13 +11,13 @@ type refreshResponse struct {
 	AccessToken string `json:"accessToken"`
 }
 
-func (a authService) Refresh(c *fiber.Ctx) error {
+func (h *AuthHandler) Refresh(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
-	refreshClaims, refreshToken, err := a.jwt.parseFromHeader(authHeader)
+	refreshClaims, refreshToken, err := h.jwtService.ParseFromHeader(authHeader)
 	if err != nil {
 		return err
 	}
-	if refreshClaims.Type != JWTTypeRefresh {
+	if refreshClaims.Type != types.JWTTypeRefresh {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid token type")
 	}
 
@@ -25,7 +26,7 @@ func (a authService) Refresh(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	tokenDB, err := a.db.GetRefreshToken(c.Context(), id)
+	tokenDB, err := h.repo.GetRefreshToken(c.Context(), id)
 	if err != nil || tokenDB == nil {
 		log.Info("err", err)
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid Refresh token")
@@ -33,7 +34,7 @@ func (a authService) Refresh(c *fiber.Ctx) error {
 	if refreshToken != *tokenDB {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid refresh token")
 	}
-	newAccessToken, err := a.jwt.newAccessToken(id)
+	newAccessToken, err := h.jwtService.NewAccessToken(id)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to generate access token")
 	}
