@@ -49,12 +49,12 @@ func (a authService) Signup(c *fiber.Ctx) error {
 
 	userID := uuid.New()
 
-	accessToken, err := a.generateToken(userID.String(), a.JWTAccessDuration)
+	accessToken, err := a.jwt.newAccessToken(userID)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to generate access token")
 	}
 
-	refreshToken, err := a.generateToken(userID.String(), a.JWTRefreshDuration)
+	refreshToken, err := a.jwt.newAccessToken(userID)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to generate refresh token")
 	}

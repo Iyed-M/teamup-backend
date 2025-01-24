@@ -7,17 +7,13 @@ import (
 )
 
 type authService struct {
-	JWTSecret          []byte
-	JWTAccessDuration  time.Duration
-	JWTRefreshDuration time.Duration
-	db                 *repository.Queries
+	db  *repository.Queries
+	jwt jwtService
 }
 
 func NewAuthService(JWTSecret []byte, JWTAccessDuration, JWTRefreshDuration time.Duration, db *repository.Queries) authService {
 	return authService{
-		JWTSecret:          JWTSecret,
-		JWTAccessDuration:  JWTAccessDuration,
-		JWTRefreshDuration: JWTRefreshDuration,
-		db:                 db,
+		jwt: newJwtService(JWTSecret, JWTAccessDuration, JWTRefreshDuration),
+		db:  db,
 	}
 }

@@ -39,12 +39,12 @@ func (a authService) Login(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid credentials")
 	}
 
-	accessToken, err := a.generateToken(user.ID.String(), a.JWTAccessDuration)
+	accessToken, err := a.jwt.newAccessToken(user.ID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to generate access token")
 	}
 
-	refreshToken, err := a.generateToken(user.ID.String(), a.JWTRefreshDuration)
+	refreshToken, err := a.jwt.newRefreshToken(user.ID)
 	if err != nil {
 		return fiber.NewError(http.StatusInternalServerError, "Failed to generate refresh token")
 	}

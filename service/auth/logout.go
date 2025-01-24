@@ -8,11 +8,15 @@ import (
 
 func (a authService) Logout(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
-	userID, err := parseFromHeader(authHeader, a.JWTSecret)
+	claims, _, err := a.jwt.parseFromHeader(authHeader)
 	if err != nil {
 		return err
 	}
-	id, err := uuid.Parse(userID)
+	if claims.Type != JWTTypeAccess {
+		return fiber.NewError(fiber.StatusUnauthorized, "Invalid token type")
+	}
+
+	id, err := uuid.Parse(claims.Id)
 	if err != nil {
 		return err
 	}

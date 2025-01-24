@@ -3,7 +3,7 @@
 
 ## auth
 
-- [ ] /refresh : fix "unvalid claims"
+- [x] /refresh : fix "unvalid claims"
 
 ## db
 
