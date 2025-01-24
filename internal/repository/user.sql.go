@@ -22,7 +22,7 @@ INSERT INTO users (
     $2,
 		$3,
 		$4
-) RETURNING id, email, password, username, refresh_token
+) RETURNING id, email, password, username, created_at, refresh_token
 `
 
 type CreateUserParams struct {
@@ -45,6 +45,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Email,
 		&i.Password,
 		&i.Username,
+		&i.CreatedAt,
 		&i.RefreshToken,
 	)
 	return i, err
@@ -64,7 +65,7 @@ func (q *Queries) GetRefreshToken(ctx context.Context, userID uuid.UUID) (*strin
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, password, username, refresh_token FROM users where users.email = $1 limit 1
+SELECT id, email, password, username, created_at, refresh_token FROM users where users.email = $1 limit 1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -75,13 +76,14 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Email,
 		&i.Password,
 		&i.Username,
+		&i.CreatedAt,
 		&i.RefreshToken,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, password, username, refresh_token FROM users where users.id = $1 limit 1
+SELECT id, email, password, username, created_at, refresh_token FROM users where users.id = $1 limit 1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
@@ -92,6 +94,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.Email,
 		&i.Password,
 		&i.Username,
+		&i.CreatedAt,
 		&i.RefreshToken,
 	)
 	return i, err

@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/Iyed-M/teamup-backend/config"
+	"github.com/Iyed-M/teamup-backend/handlers/auth_handler"
+	team_handler "github.com/Iyed-M/teamup-backend/handlers/team_handeler"
 	"github.com/Iyed-M/teamup-backend/internal/repository"
-	"github.com/Iyed-M/teamup-backend/service/auth"
+	"github.com/Iyed-M/teamup-backend/service/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -15,43 +17,51 @@ import (
 
 func main() {
 	log.SetLevel(log.LevelTrace)
-	cfg, err := config.NewConfig()
+	envVars, err := config.ParseEnv()
+	ctx := context.Background()
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx := context.Background()
 
-	conn, err := pgx.Connect(ctx, cfg.DbURL)
+	repo, conn, err := config.InitDB(envVars.DbURL, ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close(ctx)
 
-	queries := repository.New(conn)
-
 	app := fiber.New(fiber.Config{
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			if e, ok := err.(*fiber.Error); ok {
-				return c.Status(e.Code).JSON(fiber.Map{
-					"error": e.Message,
-				})
-			}
-			log.Errorw("Unhandled Error", "err", err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Internal Server Error",
-			})
-		},
+		ErrorHandler: restErrorHandler,
+		Prefork:      true,
 	})
 
 	app.Use(logger.New())
 	app.Use(recover.New())
+	app.Group("/api")
 
-	auth := auth.NewAuthService([]byte(cfg.JWTSecret), cfg.JWTAccessDuration, cfg.JWTRefreshDuration, queries)
+	jwtService := jwt.NewJwtService([]byte(envVars.JWTSecret), envVars.JWTAccessDuration, envVars.JWTRefreshDuration)
+	addRestEndpoints(app, conn, repo, jwtService)
+	log.Fatal(app.Listen(":" + envVars.Port))
+}
 
-	app.Post("/signup", auth.Signup)
-	app.Post("/login", auth.Login)
-	app.Post("/refresh", auth.Refresh)
-	app.Post("/logout", auth.Logout)
+func addRestEndpoints(app *fiber.App, conn *pgx.Conn, repo *repository.Queries, jwtService jwt.JwtService) {
+	authHandler := auth_handler.NewAuthHandler(jwtService, repo)
+	app.Post("/signup", authHandler.Signup)
+	app.Post("/login", authHandler.Login)
+	app.Post("/refresh", authHandler.Refresh)
+	app.Post("/logout", authHandler.Logout)
 
-	log.Fatal(app.Listen(":8080"))
+	teamHandler := team_handler.NewTeamHandler(repo, conn)
+	app.Post("/teams", teamHandler.CreateTeam)
+}
+
+func restErrorHandler(c *fiber.Ctx, err error) error {
+	if e, ok := err.(*fiber.Error); ok {
+		return c.Status(e.Code).JSON(fiber.Map{
+			"error": e.Message,
+		})
+	}
+	log.Errorw("Unhandled Error", "err", err)
+	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		"error": "Internal Server Error",
+	})
 }

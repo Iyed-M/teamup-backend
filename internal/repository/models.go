@@ -7,9 +7,9 @@ package repository
 import (
 	"database/sql/driver"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type InvitationStatus string
@@ -56,18 +56,18 @@ func (ns NullInvitationStatus) Value() (driver.Value, error) {
 }
 
 type DirectMessage struct {
-	ID         uuid.UUID        `json:"id"`
-	SenderID   uuid.UUID        `json:"senderId"`
-	ReceiverID uuid.UUID        `json:"receiverId"`
-	Message    string           `json:"message"`
-	CreatedAt  pgtype.Timestamp `json:"createdAt"`
+	ID         uuid.UUID `json:"id"`
+	SenderID   uuid.UUID `json:"senderId"`
+	ReceiverID uuid.UUID `json:"receiverId"`
+	Message    string    `json:"message"`
+	CreatedAt  time.Time `json:"createdAt"`
 }
 
 type Project struct {
-	ID        uuid.UUID        `json:"id"`
-	Name      string           `json:"name"`
-	TeamID    uuid.UUID        `json:"teamId"`
-	CreatedAt pgtype.Timestamp `json:"createdAt"`
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	TeamID    uuid.UUID `json:"teamId"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type ProjectPermission struct {
@@ -84,13 +84,13 @@ type SubTask struct {
 }
 
 type Task struct {
-	ID            uuid.UUID        `json:"id"`
-	Content       string           `json:"content"`
-	ProjectID     uuid.UUID        `json:"projectId"`
-	CreatedAt     pgtype.Timestamp `json:"createdAt"`
-	Deadline      pgtype.Timestamp `json:"deadline"`
-	AttachmentUrl *string          `json:"attachmentUrl"`
-	TaskOrder     int32            `json:"taskOrder"`
+	ID            uuid.UUID  `json:"id"`
+	Content       string     `json:"content"`
+	ProjectID     uuid.UUID  `json:"projectId"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	Deadline      *time.Time `json:"deadline"`
+	AttachmentUrl *string    `json:"attachmentUrl"`
+	TaskOrder     int32      `json:"taskOrder"`
 }
 
 type TaskAssignment struct {
@@ -100,10 +100,10 @@ type TaskAssignment struct {
 }
 
 type Team struct {
-	ID        uuid.UUID        `json:"id"`
-	Name      string           `json:"name"`
-	Color     *string          `json:"color"`
-	CreatedAt pgtype.Timestamp `json:"createdAt"`
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Color     *string   `json:"color"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type TeamInvitation struct {
@@ -111,15 +111,15 @@ type TeamInvitation struct {
 	TeamID     uuid.UUID        `json:"teamId"`
 	SenderID   uuid.UUID        `json:"senderId"`
 	ReceiverID uuid.UUID        `json:"receiverId"`
-	CreatedAt  pgtype.Timestamp `json:"createdAt"`
+	CreatedAt  time.Time        `json:"createdAt"`
 	Status     InvitationStatus `json:"status"`
 }
 
 type TeamPermission struct {
-	ID          uuid.UUID `json:"id"`
-	TeamID      uuid.UUID `json:"teamId"`
-	UserID      uuid.UUID `json:"userId"`
-	Permissions []string  `json:"permissions"`
+	ID      uuid.UUID `json:"id"`
+	TeamID  uuid.UUID `json:"teamId"`
+	UserID  uuid.UUID `json:"userId"`
+	IsOwner bool      `json:"isOwner"`
 }
 
 type User struct {
@@ -127,5 +127,6 @@ type User struct {
 	Email        string    `json:"email"`
 	Password     string    `json:"password"`
 	Username     string    `json:"username"`
+	CreatedAt    time.Time `json:"createdAt"`
 	RefreshToken *string   `json:"refreshToken"`
 }
