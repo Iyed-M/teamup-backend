@@ -1,0 +1,44 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "sql/queries/"
+    schema: "./sql/schema.sql"
+    gen:
+      go:
+        emit_empty_slices: true
+        json_tags_case_style: "camelCase"
+        emit_pointers_for_null_types: true
+        out: "internal/repository"
+        sql_package: "pgx/v5"
+        overrides:
+          - db_type: "uuid"
+            nullable: true
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: false
+          - db_type: "uuid"
+            nullable: true
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: true
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+          - db_type: "timestamptz"
+            nullable: false
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: false
+          - db_type: "text"
+            go_type:
+              type: "string"

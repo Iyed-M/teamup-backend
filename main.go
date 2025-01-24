@@ -1,13 +1,16 @@
 package main
 
 import (
-	"log"
+	"context"
 
 	"github.com/Iyed-M/teamup-backend/config"
+	"github.com/Iyed-M/teamup-backend/internal/repository"
 	"github.com/Iyed-M/teamup-backend/service/auth"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/jackc/pgx/v5"
 )
 
 func main() {
@@ -15,10 +18,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db, err := config.InitDB(cfg)
+	ctx := context.Background()
+
+	conn, err := pgx.Connect(ctx, cfg.DbURL)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer conn.Close(ctx)
+
+	queries := repository.New(conn)
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -27,6 +35,7 @@ func main() {
 					"error": e.Message,
 				})
 			}
+			log.Errorw("Unhandled Error", "err", err)
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "Internal Server Error",
 			})
@@ -36,7 +45,7 @@ func main() {
 	app.Use(logger.New())
 	app.Use(recover.New())
 
-	auth := auth.NewAuthService([]byte(cfg.JWTSecret), cfg.JWTAccessDuration, cfg.JWTRefreshDuration, db)
+	auth := auth.NewAuthService([]byte(cfg.JWTSecret), cfg.JWTAccessDuration, cfg.JWTRefreshDuration, queries)
 
 	app.Post("/signup", auth.Signup)
 	app.Post("/login", auth.Login)
