@@ -55,26 +55,20 @@ func (ns NullInvitationStatus) Value() (driver.Value, error) {
 	return string(ns.InvitationStatus), nil
 }
 
-type DirectMessage struct {
-	ID         uuid.UUID `json:"id"`
-	SenderID   uuid.UUID `json:"senderId"`
-	ReceiverID uuid.UUID `json:"receiverId"`
-	Message    string    `json:"message"`
-	CreatedAt  time.Time `json:"createdAt"`
-}
-
 type Project struct {
 	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
-	TeamID    uuid.UUID `json:"teamId"`
 	CreatedAt time.Time `json:"createdAt"`
+	Color     string    `json:"color"`
 }
 
-type ProjectPermission struct {
-	ID          uuid.UUID `json:"id"`
-	UserID      uuid.UUID `json:"userId"`
-	ProjectID   uuid.UUID `json:"projectId"`
-	Permissions []string  `json:"permissions"`
+type ProjectInvitation struct {
+	ID         uuid.UUID        `json:"id"`
+	ProjectID  uuid.UUID        `json:"projectId"`
+	SenderID   uuid.UUID        `json:"senderId"`
+	ReceiverID uuid.UUID        `json:"receiverId"`
+	CreatedAt  time.Time        `json:"createdAt"`
+	Status     InvitationStatus `json:"status"`
 }
 
 type SubTask struct {
@@ -99,29 +93,6 @@ type TaskAssignment struct {
 	TaskID uuid.UUID `json:"taskId"`
 }
 
-type Team struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Color     *string   `json:"color"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
-type TeamInvitation struct {
-	ID         uuid.UUID        `json:"id"`
-	TeamID     uuid.UUID        `json:"teamId"`
-	SenderID   uuid.UUID        `json:"senderId"`
-	ReceiverID uuid.UUID        `json:"receiverId"`
-	CreatedAt  time.Time        `json:"createdAt"`
-	Status     InvitationStatus `json:"status"`
-}
-
-type TeamPermission struct {
-	ID      uuid.UUID `json:"id"`
-	TeamID  uuid.UUID `json:"teamId"`
-	UserID  uuid.UUID `json:"userId"`
-	IsOwner bool      `json:"isOwner"`
-}
-
 type User struct {
 	ID           uuid.UUID `json:"id"`
 	Email        string    `json:"email"`
@@ -129,4 +100,11 @@ type User struct {
 	Username     string    `json:"username"`
 	CreatedAt    time.Time `json:"createdAt"`
 	RefreshToken *string   `json:"refreshToken"`
+}
+
+type UserProject struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"userId"`
+	ProjectID uuid.UUID `json:"projectId"`
+	IsOwner   bool      `json:"isOwner"`
 }

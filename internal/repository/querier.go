@@ -11,15 +11,15 @@ import (
 )
 
 type Querier interface {
-	AddTeamPermissions(ctx context.Context, arg AddTeamPermissionsParams) error
+	AddUserToProject(ctx context.Context, arg AddUserToProjectParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	GetRefreshToken(ctx context.Context, userID uuid.UUID) (*string, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
-	InviteToTeam(ctx context.Context, arg InviteToTeamParams) error
-	NewTeam(ctx context.Context, arg NewTeamParams) (Team, error)
+	InviteToProject(ctx context.Context, arg InviteToProjectParams) error
+	NewProject(ctx context.Context, arg NewProjectParams) (Project, error)
 	RemoveRefreshToken(ctx context.Context, userID uuid.UUID) error
-	ResondToTeamInvitation(ctx context.Context, arg ResondToTeamInvitationParams) error
+	ResondToProjectInvitation(ctx context.Context, arg ResondToProjectInvitationParams) error
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) error
 }
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/Iyed-M/teamup-backend/config"
 	"github.com/Iyed-M/teamup-backend/handlers/auth_handler"
-	team_handler "github.com/Iyed-M/teamup-backend/handlers/team_handeler"
+	project_handler "github.com/Iyed-M/teamup-backend/handlers/project_handeler"
 	"github.com/Iyed-M/teamup-backend/internal/repository"
 	"github.com/Iyed-M/teamup-backend/service/jwt"
 	jwtware "github.com/gofiber/contrib/jwt"
@@ -53,9 +53,9 @@ func addRestEndpoints(app *fiber.App, conn *pgx.Conn, repo *repository.Queries, 
 	app.Use(jwtware.New(jwtware.Config{
 		SigningKey: jwtware.SigningKey{Key: jwtService.Secret},
 	}))
-	teamHandler := team_handler.NewTeamHandler(repo, conn)
-	app.Post("/teams", teamHandler.CreateTeam)
-	app.Post("/teams/invite", teamHandler.InviteTeamMember)
+	projectHandler := project_handler.NewProjectHandler(repo, conn)
+	app.Post("/projects", projectHandler.CreateTeam)
+	app.Post("/teams/invite", projectHandler.InviteProjectMember)
 }
 
 func restErrorHandler(c *fiber.Ctx, err error) error {
