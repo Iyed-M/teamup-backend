@@ -51,7 +51,7 @@ func addRestEndpoints(app *fiber.App, conn *pgx.Conn, repo *repository.Queries, 
 	app.Post("/refresh", authHandler.Refresh)
 	app.Post("/logout", authHandler.Logout)
 	app.Use(jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{Key: []byte("secret")},
+		SigningKey: jwtware.SigningKey{Key: jwtService.Secret},
 	}))
 	teamHandler := team_handler.NewTeamHandler(repo, conn)
 	app.Post("/teams", teamHandler.CreateTeam)
