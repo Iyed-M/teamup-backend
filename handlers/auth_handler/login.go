@@ -3,6 +3,7 @@ package auth_handler
 import (
 	"github.com/Iyed-M/teamup-backend/internal/repository"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -12,10 +13,11 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	Email        string `json:"email"`
-	Username     string `json:"username"`
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
+	Id           uuid.UUID `json:"id"`
+	Email        string    `json:"email"`
+	Username     string    `json:"username"`
+	AccessToken  string    `json:"accessToken"`
+	RefreshToken string    `json:"refreshToken"`
 }
 
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
@@ -55,6 +57,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(loginResponse{
+		Id:           user.ID,
 		Email:        user.Email,
 		Username:     user.Username,
 		AccessToken:  accessToken,
