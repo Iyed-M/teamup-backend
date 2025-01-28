@@ -6,11 +6,13 @@ SELECT * FROM users where users.id = @id limit 1;
 
 -- name: CreateUser :one
 INSERT INTO users (
+		id,
     email,
     password,
 		username,
 		refresh_token
 ) VALUES (
+		@id,
     @email,
     @password,
 		@username,

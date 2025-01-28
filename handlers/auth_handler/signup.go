@@ -18,10 +18,11 @@ type signupRequest struct {
 }
 
 type SignupResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	Email        string `json:"email"`
-	Username     string `json:"username"`
+	Id           uuid.UUID `json:"id"`
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
+	Email        string    `json:"email"`
+	Username     string    `json:"username"`
 }
 
 func (h *AuthHandler) Signup(c *fiber.Ctx) error {
@@ -59,6 +60,7 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 	}
 
 	user, err := h.repo.CreateUser(ctx, repository.CreateUserParams{
+		ID:           userID,
 		Email:        req.Email,
 		Password:     string(hashedPassword),
 		RefreshToken: &refreshToken,
@@ -70,6 +72,7 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(SignupResponse{
+		Id:           user.ID,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		Email:        user.Email,
