@@ -17,6 +17,7 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
 	InviteToProject(ctx context.Context, arg InviteToProjectParams) error
+	ListProjects(ctx context.Context, userID uuid.UUID) ([]ProjectDatum, error)
 	NewProject(ctx context.Context, arg NewProjectParams) (Project, error)
 	RemoveRefreshToken(ctx context.Context, userID uuid.UUID) error
 	ResondToProjectInvitation(ctx context.Context, arg ResondToProjectInvitationParams) error

@@ -62,6 +62,14 @@ type Project struct {
 	Color     string    `json:"color"`
 }
 
+type ProjectDatum struct {
+	ID        uuid.UUID   `json:"id"`
+	Name      string      `json:"name"`
+	Color     string      `json:"color"`
+	CreatedAt time.Time   `json:"createdAt"`
+	Tasks     interface{} `json:"tasks"`
+}
+
 type ProjectInvitation struct {
 	ID         uuid.UUID        `json:"id"`
 	ProjectID  uuid.UUID        `json:"projectId"`

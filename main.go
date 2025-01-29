@@ -7,8 +7,7 @@ import (
 	"github.com/Iyed-M/teamup-backend/handlers/auth_handler"
 	project_handler "github.com/Iyed-M/teamup-backend/handlers/project_handeler"
 	"github.com/Iyed-M/teamup-backend/internal/repository"
-	"github.com/Iyed-M/teamup-backend/service/jwt"
-	jwtware "github.com/gofiber/contrib/jwt"
+	jwt_service "github.com/Iyed-M/teamup-backend/service/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -39,23 +38,22 @@ func main() {
 	app.Use(recover.New())
 	app.Group("/api")
 
-	jwtService := jwt.NewJwtService([]byte(envVars.JWTSecret), envVars.JWTAccessDuration, envVars.JWTRefreshDuration)
+	jwtService := jwt_service.NewJwtService([]byte(envVars.JWTSecret), envVars.JWTAccessDuration, envVars.JWTRefreshDuration)
 	addRestEndpoints(app, conn, repo, jwtService)
 	log.Fatal(app.Listen(":" + envVars.Port))
 }
 
-func addRestEndpoints(app *fiber.App, conn *pgx.Conn, repo *repository.Queries, jwtService jwt.JwtService) {
+func addRestEndpoints(app *fiber.App, conn *pgx.Conn, repo *repository.Queries, jwtService jwt_service.JwtService) {
 	authHandler := auth_handler.NewAuthHandler(jwtService, repo)
 	app.Post("/signup", authHandler.Signup)
 	app.Post("/login", authHandler.Login)
 	app.Post("/refresh", authHandler.Refresh)
 	app.Post("/logout", authHandler.Logout)
-	app.Use(jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{Key: jwtService.Secret},
-	}))
+	app.Use(jwtService.Middleware)
 	projectHandler := project_handler.NewProjectHandler(repo, conn)
-	app.Post("/projects", projectHandler.CreateTeam)
-	app.Post("/teams/invite", projectHandler.InviteProjectMember)
+	app.Post("/projects", projectHandler.CreateProject)
+	app.Post("/projects/invite", projectHandler.InviteProjectMember)
+	app.Get("/projects", projectHandler.ListProjects)
 }
 
 func restErrorHandler(c *fiber.Ctx, err error) error {
@@ -64,7 +62,7 @@ func restErrorHandler(c *fiber.Ctx, err error) error {
 			"error": e.Message,
 		})
 	}
-	log.Errorw("Unhandled Error", "err", err)
+	log.Tracew("Unhandled Error", "err", err)
 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 		"error": "Internal Server Error",
 	})

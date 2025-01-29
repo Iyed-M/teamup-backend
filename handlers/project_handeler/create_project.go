@@ -7,14 +7,14 @@ import (
 	"github.com/google/uuid"
 )
 
-type createTeamRequest struct {
+type CreateProjectRequest struct {
 	Name  string `json:"name"`
 	Color string `json:"color"`
 }
-type createTeamResponse = repository.Project
+type createProjectResponse = repository.Project
 
-func (h *projectHandler) CreateTeam(c *fiber.Ctx) error {
-	var req createTeamRequest
+func (h *projectHandler) CreateProject(c *fiber.Ctx) error {
+	var req CreateProjectRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}

@@ -41,6 +41,41 @@ func (q *Queries) InviteToProject(ctx context.Context, arg InviteToProjectParams
 	return err
 }
 
+const listProjects = `-- name: ListProjects :many
+SELECT id, name, color, created_at, tasks FROM project_data
+	WHERE id IN (
+		SELECT project_id
+		FROM user_projects
+		WHERE user_projects.user_id = $1
+	)
+`
+
+func (q *Queries) ListProjects(ctx context.Context, userID uuid.UUID) ([]ProjectDatum, error) {
+	rows, err := q.db.Query(ctx, listProjects, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ProjectDatum{}
+	for rows.Next() {
+		var i ProjectDatum
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Color,
+			&i.CreatedAt,
+			&i.Tasks,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const newProject = `-- name: NewProject :one
 INSERT INTO projects (
 		name,

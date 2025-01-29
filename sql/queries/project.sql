@@ -15,3 +15,11 @@ INSERT INTO project_invitations (project_id, sender_id, receiver_id) VALUES(@Pro
 
 -- name: ResondToProjectInvitation :exec 
 UPDATE project_invitations SET status = @Status where id = @InvitationId;
+
+-- name: ListProjects :many
+SELECT * FROM project_data
+	WHERE id IN (
+		SELECT project_id
+		FROM user_projects
+		WHERE user_projects.user_id = @user_id
+	);
