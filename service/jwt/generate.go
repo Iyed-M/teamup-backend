@@ -1,11 +1,11 @@
-package jwt
+package jwt_service
 
 import (
 	"time"
 
 	"github.com/Iyed-M/teamup-backend/types"
 	"github.com/gofiber/fiber/v2/log"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -21,9 +21,9 @@ func generateToken(userId string, duration time.Duration, tokenType types.JWTTyp
 	claims := &Claims{
 		UserID: userId,
 		Type:   tokenType,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(duration).Unix(),
-			IssuedAt:  time.Now().Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: &jwt.NumericDate{time.Now().Add(duration)},
+			IssuedAt:  &jwt.NumericDate{time.Now()},
 			Issuer:    "teamup-backend",
 		},
 	}

@@ -1,10 +1,10 @@
-package jwt
+package jwt_service
 
 import (
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -25,7 +25,6 @@ func jwtError(c *fiber.Ctx, err error) error {
 func jwtSuccess(c *fiber.Ctx) error {
 	token := c.Locals("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)
-
 	userId, err := uuid.Parse(claims["user_id"].(string))
 	if err != nil {
 		log.Errorw("JwtMiddleware error", "err", err)

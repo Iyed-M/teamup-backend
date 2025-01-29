@@ -1,16 +1,16 @@
-package jwt
+package jwt_service
 
 import (
 	"time"
 
 	"github.com/Iyed-M/teamup-backend/types"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Claims struct {
 	Type   types.JWTType `json:"type"`
 	UserID string        `json:"user_id"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 type JwtService struct {

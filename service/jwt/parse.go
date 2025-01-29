@@ -1,10 +1,10 @@
-package jwt
+package jwt_service
 
 import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	_jwt "github.com/golang-jwt/jwt"
+	_jwt "github.com/golang-jwt/jwt/v5"
 )
 
 func (j JwtService) ParseFromHeader(authHeader string) (jwtClaims *Claims, token string, err error) {

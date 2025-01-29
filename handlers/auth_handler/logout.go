@@ -17,7 +17,7 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "Invalid token type")
 	}
 
-	id, err := uuid.Parse(claims.Id)
+	id, err := uuid.Parse(claims.ID)
 	if err != nil {
 		return err
 	}
