@@ -48,19 +48,23 @@ func main() {
 
 func addRestEndpoints(app *fiber.App, conn *pgx.Conn, repo *repository.Queries, jwtService jwt_service.JwtService) {
 	authHandler := auth_handler.NewAuthHandler(jwtService, repo)
+	// auth
 	app.Post("/signup", authHandler.Signup)
 	app.Post("/login", authHandler.Login)
 	app.Post("/refresh", authHandler.Refresh)
 	app.Post("/logout", authHandler.Logout)
 	app.Use(jwtService.Middleware)
+
 	projectHandler := project_handler.NewProjectHandler(repo, conn)
-	app.Post("/projects", projectHandler.CreateProject)
+	// projects
 	app.Post("/projects/invite", projectHandler.InviteProjectMember)
 	app.Post("/projects/join", projectHandler.JoinProject)
+	app.Post("/projects", projectHandler.CreateProject)
+	app.Get("/projects/invitations")
+
 	app.Get("/projects", projectHandler.ListProjects)
 	app.Get("/projects/:projectId", projectHandler.GetProjectByID)
 	app.Get("/projects/:projectId/tasks", projectHandler.GetProjectTasks)
-	app.Get("/projects/invitations", projectHandler.ListInvitations)
 	// app.Post("/projects/:projectId/task", projectHandler.)
 }
 
