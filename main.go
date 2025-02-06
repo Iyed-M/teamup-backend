@@ -13,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/jackc/pgx/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
@@ -33,6 +34,8 @@ func main() {
 		ErrorHandler: restErrorHandler,
 		Prefork:      true,
 	})
+	p, _ := bcrypt.GenerateFromPassword([]byte("testtest"), bcrypt.DefaultCost)
+	log.Infow("HASH", "pas", string(p))
 
 	app.Use(logger.New())
 	app.Use(recover.New())
@@ -53,7 +56,11 @@ func addRestEndpoints(app *fiber.App, conn *pgx.Conn, repo *repository.Queries, 
 	projectHandler := project_handler.NewProjectHandler(repo, conn)
 	app.Post("/projects", projectHandler.CreateProject)
 	app.Post("/projects/invite", projectHandler.InviteProjectMember)
+	app.Post("/projects/join")
 	app.Get("/projects", projectHandler.ListProjects)
+	app.Get("/projects/:projectId", projectHandler.GetProjectByID)
+	app.Get("/projects/:projectId/tasks", projectHandler.GetProjectTasks)
+	// app.Post("/projects/:projectId/task", projectHandler.)
 }
 
 func restErrorHandler(c *fiber.Ctx, err error) error {

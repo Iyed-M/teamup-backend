@@ -26,6 +26,22 @@ func (q *Queries) AddUserToProject(ctx context.Context, arg AddUserToProjectPara
 	return err
 }
 
+const getProjectByID = `-- name: GetProjectByID :one
+SELECT id, name, created_at, color FROM projects WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetProjectByID(ctx context.Context, id uuid.UUID) (Project, error) {
+	row := q.db.QueryRow(ctx, getProjectByID, id)
+	var i Project
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.CreatedAt,
+		&i.Color,
+	)
+	return i, err
+}
+
 const inviteToProject = `-- name: InviteToProject :exec
 INSERT INTO project_invitations (project_id, sender_id, receiver_id) VALUES($1,$2,$3)
 `
@@ -41,8 +57,22 @@ func (q *Queries) InviteToProject(ctx context.Context, arg InviteToProjectParams
 	return err
 }
 
+const joinProject = `-- name: JoinProject :exec
+INSERT INTO user_projects (project_id, user_id, is_owner) VALUES ($1, $2, false)
+`
+
+type JoinProjectParams struct {
+	Projectid uuid.UUID `json:"projectid"`
+	Userid    uuid.UUID `json:"userid"`
+}
+
+func (q *Queries) JoinProject(ctx context.Context, arg JoinProjectParams) error {
+	_, err := q.db.Exec(ctx, joinProject, arg.Projectid, arg.Userid)
+	return err
+}
+
 const listProjects = `-- name: ListProjects :many
-SELECT id, name, color, created_at, tasks FROM project_data
+SELECT id, name, created_at, color FROM projects
 	WHERE id IN (
 		SELECT project_id
 		FROM user_projects
@@ -50,21 +80,20 @@ SELECT id, name, color, created_at, tasks FROM project_data
 	)
 `
 
-func (q *Queries) ListProjects(ctx context.Context, userID uuid.UUID) ([]ProjectDatum, error) {
+func (q *Queries) ListProjects(ctx context.Context, userID uuid.UUID) ([]Project, error) {
 	rows, err := q.db.Query(ctx, listProjects, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ProjectDatum{}
+	items := []Project{}
 	for rows.Next() {
-		var i ProjectDatum
+		var i Project
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.Color,
 			&i.CreatedAt,
-			&i.Tasks,
+			&i.Color,
 		); err != nil {
 			return nil, err
 		}

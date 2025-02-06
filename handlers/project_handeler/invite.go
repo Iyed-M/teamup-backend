@@ -2,18 +2,14 @@ package project_handler
 
 import (
 	"github.com/Iyed-M/teamup-backend/internal/repository"
+	"github.com/Iyed-M/teamup-backend/types"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
-type inviteTeamMemberRequest struct {
-	UserId    uuid.UUID `json:"userId"`
-	ProejctId uuid.UUID `json:"projectId"`
-}
-
 func (h *projectHandler) InviteProjectMember(c *fiber.Ctx) error {
 	senderId := c.Locals("userId").(uuid.UUID)
-	var req inviteTeamMemberRequest
+	var req types.InviteTeamMemberRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}

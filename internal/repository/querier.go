@@ -12,13 +12,19 @@ import (
 
 type Querier interface {
 	AddUserToProject(ctx context.Context, arg AddUserToProjectParams) error
+	AssignTask(ctx context.Context, arg AssignTaskParams) error
+	CreateTask(ctx context.Context, arg CreateTaskParams) (uuid.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	GetProjectByID(ctx context.Context, id uuid.UUID) (Project, error)
 	GetRefreshToken(ctx context.Context, userID uuid.UUID) (*string, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
 	InviteToProject(ctx context.Context, arg InviteToProjectParams) error
-	ListProjects(ctx context.Context, userID uuid.UUID) ([]ProjectDatum, error)
+	JoinProject(ctx context.Context, arg JoinProjectParams) error
+	ListProjects(ctx context.Context, userID uuid.UUID) ([]Project, error)
 	NewProject(ctx context.Context, arg NewProjectParams) (Project, error)
+	ProjectSubTasks(ctx context.Context, projectid uuid.UUID) ([]SubTask, error)
+	ProjectTasks(ctx context.Context, projectid uuid.UUID) ([]ProjectTasksRow, error)
 	RemoveRefreshToken(ctx context.Context, userID uuid.UUID) error
 	ResondToProjectInvitation(ctx context.Context, arg ResondToProjectInvitationParams) error
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) error
