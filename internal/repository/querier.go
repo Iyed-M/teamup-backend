@@ -15,7 +15,9 @@ type Querier interface {
 	AssignTask(ctx context.Context, arg AssignTaskParams) error
 	CreateTask(ctx context.Context, arg CreateTaskParams) (uuid.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteInvitation(ctx context.Context, arg DeleteInvitationParams) error
 	GetProjectByID(ctx context.Context, id uuid.UUID) (Project, error)
+	GetProjectInvitations(ctx context.Context, userid uuid.UUID) ([]GetProjectInvitationsRow, error)
 	GetRefreshToken(ctx context.Context, userID uuid.UUID) (*string, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
@@ -26,7 +28,6 @@ type Querier interface {
 	ProjectSubTasks(ctx context.Context, projectid uuid.UUID) ([]SubTask, error)
 	ProjectTasks(ctx context.Context, projectid uuid.UUID) ([]ProjectTasksRow, error)
 	RemoveRefreshToken(ctx context.Context, userID uuid.UUID) error
-	ResondToProjectInvitation(ctx context.Context, arg ResondToProjectInvitationParams) error
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) error
 }
 

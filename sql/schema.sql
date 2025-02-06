@@ -23,7 +23,6 @@ CREATE TABLE project_invitations (
     sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
     receiver_id UUID REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status invitation_status  NOT NULL DEFAULT 'pending' 
 );
 
 CREATE TABLE user_projects (

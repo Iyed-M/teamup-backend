@@ -26,6 +26,20 @@ func (q *Queries) AddUserToProject(ctx context.Context, arg AddUserToProjectPara
 	return err
 }
 
+const deleteInvitation = `-- name: DeleteInvitation :exec
+DELETE FROM project_invitations where receiver_id = $1 and project_id = $2
+`
+
+type DeleteInvitationParams struct {
+	Userid    uuid.UUID `json:"userid"`
+	Projectid uuid.UUID `json:"projectid"`
+}
+
+func (q *Queries) DeleteInvitation(ctx context.Context, arg DeleteInvitationParams) error {
+	_, err := q.db.Exec(ctx, deleteInvitation, arg.Userid, arg.Projectid)
+	return err
+}
+
 const getProjectByID = `-- name: GetProjectByID :one
 SELECT id, name, created_at, color FROM projects WHERE id = $1 LIMIT 1
 `
@@ -40,6 +54,50 @@ func (q *Queries) GetProjectByID(ctx context.Context, id uuid.UUID) (Project, er
 		&i.Color,
 	)
 	return i, err
+}
+
+const getProjectInvitations = `-- name: GetProjectInvitations :many
+SELECT projects.id, projects.name, projects.created_at, projects.color, users.id, users.email, users.password, users.username, users.created_at, users.refresh_token 
+FROM projects 
+JOIN project_invitations on projects.id = project_invitations.project_id 
+JOIN users on project_invitations.sender_id = users.id
+WHERE project_invitations.status = 'pending' AND receiver_id = $1
+`
+
+type GetProjectInvitationsRow struct {
+	Project Project `json:"project"`
+	User    User    `json:"user"`
+}
+
+func (q *Queries) GetProjectInvitations(ctx context.Context, userid uuid.UUID) ([]GetProjectInvitationsRow, error) {
+	rows, err := q.db.Query(ctx, getProjectInvitations, userid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetProjectInvitationsRow{}
+	for rows.Next() {
+		var i GetProjectInvitationsRow
+		if err := rows.Scan(
+			&i.Project.ID,
+			&i.Project.Name,
+			&i.Project.CreatedAt,
+			&i.Project.Color,
+			&i.User.ID,
+			&i.User.Email,
+			&i.User.Password,
+			&i.User.Username,
+			&i.User.CreatedAt,
+			&i.User.RefreshToken,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const inviteToProject = `-- name: InviteToProject :exec
@@ -130,18 +188,4 @@ func (q *Queries) NewProject(ctx context.Context, arg NewProjectParams) (Project
 		&i.Color,
 	)
 	return i, err
-}
-
-const resondToProjectInvitation = `-- name: ResondToProjectInvitation :exec
-UPDATE project_invitations SET status = $1 where id = $2
-`
-
-type ResondToProjectInvitationParams struct {
-	Status       InvitationStatus `json:"status"`
-	Invitationid uuid.UUID        `json:"invitationid"`
-}
-
-func (q *Queries) ResondToProjectInvitation(ctx context.Context, arg ResondToProjectInvitationParams) error {
-	_, err := q.db.Exec(ctx, resondToProjectInvitation, arg.Status, arg.Invitationid)
-	return err
 }
