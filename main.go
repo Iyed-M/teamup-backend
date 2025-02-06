@@ -56,10 +56,11 @@ func addRestEndpoints(app *fiber.App, conn *pgx.Conn, repo *repository.Queries, 
 	projectHandler := project_handler.NewProjectHandler(repo, conn)
 	app.Post("/projects", projectHandler.CreateProject)
 	app.Post("/projects/invite", projectHandler.InviteProjectMember)
-	app.Post("/projects/join")
+	app.Post("/projects/join", projectHandler.JoinProject)
 	app.Get("/projects", projectHandler.ListProjects)
 	app.Get("/projects/:projectId", projectHandler.GetProjectByID)
 	app.Get("/projects/:projectId/tasks", projectHandler.GetProjectTasks)
+	app.Get("/projects/invitations", projectHandler.ListInvitations)
 	// app.Post("/projects/:projectId/task", projectHandler.)
 }
 
